@@ -5,6 +5,7 @@
 #include <time.h>
 #include <math.h>
 #include <stdbool.h>
+#include "history.h"
 
 typedef struct Node Node;
 
@@ -46,10 +47,22 @@ void addFileContent(Node* file, const char* content) {
     strcpy(file->content, content);
 }
 
-void deleteNode(Node* node) {
+UndoOperation* deleteNode(Node* node) {
 
-    
+    UndoOperation *currentOperation = createUndoOperation(DELETE_OPERATION,node);
+
     Node * parent;
+    int numChildren = node->numChildren;
+
+    currentOperation->children = (UndoOperation**)malloc(numChildren * sizeof(UndoOperation*));
+    int i = 0;
+
+    while (numChildren > 0) {  
+        UndoOperation *childOperation = deleteNode(node->children[0]);
+        currentOperation->children[i] = childOperation;
+        numChildren = node->numChildren;
+        i++;
+    }
 
     if(node->parent != NULL){
         parent = node->parent;
@@ -67,13 +80,18 @@ void deleteNode(Node* node) {
         }
     }
 
-    for (int i = 0; i < node->numChildren; i++) {
-        deleteNode(node->children[i]);
-    }
+    
 
     if (node->isFile) {
         //free(node->content);
     }
 
+    if (node->children != NULL) {
+        free(node->children);
+        node->children = NULL;
+    }
+
     free(node);
+
+    return currentOperation;
 }

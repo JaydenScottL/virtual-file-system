@@ -5,6 +5,7 @@
 #include <time.h>
 #include <math.h>
 #include <stdbool.h>
+#include "history.h"
 #include "file.h"
 #include "externals.h"
 
@@ -12,56 +13,6 @@
 Name: Jayden LeCorps
 Date: 11/30/2024
 */
-
-typedef enum OperationType OperationType;
-
-typedef struct OperationStack OperationStack;
-
-typedef struct UndoOperation UndoOperation;
-
-enum OperationType{ 
-    DELETE_OPERATION,
-    RENAME_OPERATION
-};
-
-struct UndoOperation{
-    OperationType operation;
-    Node *node;
-    char oldName[100];
-    char oldContent[1000];
-    char oldDateTime[100];
-    Node *parent;
-    UndoOperation *children;
-    int numChildren = 0;
-};
-
-UndoOperation createUndoOperation(OperationType operation, Node *node){
-    UndoOperation u;
-    u.operation = operation;
-    u.node = node;
-    strcpy(u.oldName, node->name);
-    strcpy(u.oldContent, node->content);
-    strcpy(u.oldDateTime, node->creation_time);
-    u.parent = node->parent;
-    return u;
-}
-
-struct OperationStack{
-    UndoOperation operations[100];
-    int top;
-};
-
-void pushUndo(OperationStack* stack, UndoOperation operation){
-    if (stack->top < 99) {
-        stack->operations[++stack->top] = operation;
-    }
-}
-
-UndoOperation * popUndo(OperationStack* stack){
-    if (stack->top >= 0) {
-        return &stack->operations[stack->top--];
-    }
-}
 
 void printTree(Node* node, int depth) {
     for (int i = 0; i < depth; i++) {
@@ -132,8 +83,8 @@ int main() {
     // Create root directory
     Node* root = createNode("Root", 0);
     Node *currentDirectory = root;
-    OperationStack undoStack;
-    undoStack.top = -1;
+    OperationStack * undoStack = (OperationStack*)malloc(sizeof(OperationStack));
+    undoStack->top = -1;
 
     while(true){
         
@@ -269,8 +220,8 @@ int main() {
                                 ptr++;
                             }
 
-                            UndoOperation u = createUndoOperation(RENAME_OPERATION,currentDirectory->children[i]);
-                            pushUndo(&undoStack, u);
+                            UndoOperation *u = createUndoOperation(RENAME_OPERATION,currentDirectory->children[i]);
+                            pushUndo(undoStack, u);
 
                             strcpy(currentDirectory->children[i]->name,name);
                             flag = false;
@@ -381,25 +332,12 @@ int main() {
                 for(int i = 0;i < currentDirectory->numChildren;i++){
                     
                     if(strcmp(currentDirectory->children[i]->name,argument) == 0){
-                        
-                        UndoOperation u = createUndoOperation(DELETE_OPERATION,currentDirectory->children[i]);
-                        pushUndo(&undoStack, u);
-                        
-                        if(!currentDirectory->children[i]->isFile){
-                            for(int j = 0;j < currentDirectory->children[i]->numChildren;j++){
-                                
-                                UndoOperation u2 = createUndoOperation(DELETE_OPERATION,currentDirectory->children[i]->children[j]);
-                                (u.children) = (UndoOperation*)realloc(u.children, (u.numChildren + 1) * sizeof(UndoOperation*));
-                                u.children[j] = u2;
-                                
-                                deleteNode(currentDirectory->children[i]->children[j]);
-                            }
-                        }
 
-                        deleteNode(currentDirectory->children[i]);
+                        pushUndo(undoStack,deleteNode(currentDirectory->children[i]));
 
                         printf("Deleted %s\n", argument);
                         flag = false;
+                        break;
                     }
                 }
             }
@@ -411,22 +349,11 @@ int main() {
 
         else if(strstr(l_command,"undo") != NULL){
 
-            if(undoStack.top >= 0){
-                UndoOperation *u = popUndo(&undoStack);
+            if(undoStack->top >= 0){
+                UndoOperation *u = popUndo(undoStack);
                 
 
-                if(u->operation == RENAME_OPERATION){
-                    
-                    printf("Undid rename %s->%s\n",u->node->name,u->oldName);
-                    strcpy(u->node->name, u->oldName);
-
-                }else if(u->operation == DELETE_OPERATION){
-                    printf("Undid delete %s\n",u->oldName);
-                    Node *newNode = createNode(u->oldName,u->node->isFile);
-                    strcpy(newNode->content,u->oldContent);
-                    strcpy(newNode->creation_time,u->oldDateTime);
-                    addChild(u->parent,u->node);
-                }
+                processUndo(u,root);
             }else{
                 printf("No operations to undo\n");
             }
@@ -473,7 +400,7 @@ int main() {
                     perror("Error opening file");
                     return 1;
                 }
-                deleteNode(root);
+                pushUndo(undoStack,deleteNode(root));
                 root = importFileSystem(fp);
                 currentDirectory = root;
                 flag = false;

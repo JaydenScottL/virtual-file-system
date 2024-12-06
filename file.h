@@ -2,6 +2,8 @@
 #define V_FILE
 
 typedef struct Node Node;
+typedef struct OperationStack OperationStack;
+typedef struct UndoOperation UndoOperation;
 
 struct Node {
     char name[1000];
@@ -18,6 +20,6 @@ struct Node* createNode(const char* name, int isFile);
 void addChild(struct Node* parent, struct Node* child);
 void addFileContent(Node* file, const char* content);
 
-void deleteNode(Node* node);
+UndoOperation* deleteNode(Node* node);
 
 #endif
