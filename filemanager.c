@@ -10,7 +10,7 @@
 #include "externals.h"
 
 /*
-Name: Jayden LeCorps
+Name: Jayden 
 Date: 11/30/2024
 */
 
@@ -357,6 +357,75 @@ int main() {
             }else{
                 printf("No operations to undo\n");
             }
+        }
+
+        else if(strstr(l_command,"mv") != NULL){
+            char * argument = strtok(command, " "); 
+            argument = strtok(NULL, ""); 
+            bool flag = true;
+
+            PathLinkedList *pathRoot;
+            PathLinkedList *pathPtr = pathRoot;
+
+            if(argument != NULL){
+                for(int i = 0;i < currentDirectory->numChildren;i++){
+                    
+                    if(strcmp(currentDirectory->children[i]->name,argument) == 0){
+
+                        printf("Enter destination for %s:\n",argument);
+                        char dest[100];
+                        fgets(dest,100,stdin);
+                        
+                        command[strcspn(dest, "\n")] = '\0';
+
+                        char *ptr = dest;
+
+                        while (*ptr) {
+                            if (*ptr == '\n') {
+                                *ptr = '\0';
+                            }
+                            ptr++;
+                        }
+
+                        pathPtr = (PathLinkedList*)malloc(sizeof(PathLinkedList));
+                        pathPtr->path = dest;
+                        pathPtr = pathPtr->next;
+                        
+                        Node *temp = scoutPath(root,pathRoot);
+
+                        addChild(temp,currentDirectory->children[i]);
+                        Node *parent = currentDirectory;
+                        for (int i = 0; i < parent->numChildren; i++) {
+                            if (parent->children[i] == currentDirectory->children[i]) {
+                                // Shift elements to the left to remove the deleted node
+                                for (int j = i; j < parent->numChildren - 1; j++) {
+                                    parent->children[j] = parent->children[j + 1];
+                                }
+                                parent->numChildren--;
+                                break;
+                            }
+                        }
+
+                        
+
+                        if(temp->isFile){
+                            printf("%s is a file. Cannot move into a file.\n",argument);
+                        }else{
+                            
+                            
+                        }
+                    }
+                }
+            }
+
+            
+            
+                
+
+            if(flag){
+                printf("%s was not found in the directory\n",argument);
+            }
+            
         }
 
         else if(strstr(l_command,"listfs") != NULL){ 

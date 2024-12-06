@@ -9,6 +9,8 @@ typedef struct OperationStack OperationStack;
 
 typedef struct UndoOperation UndoOperation;
 
+typedef struct PathLinkedList PathLinkedList;
+
 struct OperationStack{
     UndoOperation *operations[100];
     int top;
@@ -33,9 +35,14 @@ struct UndoOperation{
     int numChildren;
 };
 
+struct PathLinkedList{
+    char *path;
+    PathLinkedList *next;
+};
+
 UndoOperation * createUndoOperation(OperationType operation, Node *node);
 
-
+Node * scoutPath(Node *root, PathLinkedList *pathRoot);
 
 void pushUndo(OperationStack* stack, UndoOperation *operation);
 

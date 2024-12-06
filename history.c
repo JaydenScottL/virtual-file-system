@@ -13,6 +13,8 @@ typedef struct OperationStack OperationStack;
 
 typedef struct UndoOperation UndoOperation;
 
+typedef struct PathLinkedList PathLinkedList;
+
 struct OperationStack{
     UndoOperation *operations[100];
     int top;
@@ -35,6 +37,11 @@ struct UndoOperation{
     int isFile;
     UndoOperation **children;
     int numChildren;
+};
+
+struct PathLinkedList{
+    char *path;
+    PathLinkedList *next;
 };
 
 UndoOperation * createUndoOperation(OperationType operation, Node *node){
@@ -78,9 +85,25 @@ UndoOperation * popUndo(OperationStack* stack){
     }
 }
 
+Node * scoutPath(Node *root, PathLinkedList *pathRoot) {
+    Node *temp = root;
+    PathLinkedList *current = pathRoot;
+    
+    while (current != NULL) {
+        for (int j = 0; j < temp->numChildren; j++) {
+            if (strcmp(temp->children[j]->name, current->path) == 0) {
+                temp = temp->children[j];
+                break;
+            }
+        }
+        current = current->next;
+    }
+    
+    return temp;
+}
+
 Node* scoutRoot(Node *root, char **parentPath,int numParentPath){
     Node *temp = root;
-    //printTree2(root,0);
 
     int i = 1;
     
