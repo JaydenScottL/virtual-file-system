@@ -18,7 +18,8 @@ struct OperationStack{
 
 enum OperationType{ 
     DELETE_OPERATION,
-    RENAME_OPERATION
+    RENAME_OPERATION,
+    MOVE_OPERATION
 };
 
 struct UndoOperation{

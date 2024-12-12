@@ -20,7 +20,7 @@ Node* importFileSystem(FILE* fp) {
             // Check if it's a directory or file
             if (!(line[0] == '/')) {
                 char name[100];
-                char content[100];
+                char * content;
                 char dt[100];
 
                 bool dt_set = false;
@@ -41,6 +41,8 @@ Node* importFileSystem(FILE* fp) {
                         strcpy(name,token);
                     } else if (strcmp(token, "file_content") == 0) {
                         token = strtok(NULL, "#");
+                        //strcpy(content,token);
+                        content = (char*)malloc(strlen(token) + 1);
                         strcpy(content,token);
                         content_set = true;
                     } else if (strcmp(token, "date_time") == 0) {

@@ -12,7 +12,7 @@ struct Node {
     Node *parent;
     Node **children;
     int numChildren;
-    char content[1000];
+    char * content;
 };
 
 struct Node* createNode(const char* name, int isFile);

@@ -16,7 +16,7 @@ struct Node {
     Node *parent;
     Node **children;
     int numChildren;
-    char content[1000];
+    char * content;
 };
 
 struct Node* createNode(const char* name, int isFile) {
@@ -26,6 +26,7 @@ struct Node* createNode(const char* name, int isFile) {
     node->children = NULL;
     node->parent = NULL;
     node->numChildren = 0;
+    node->content = NULL;
 
     time_t t = time(NULL);
     struct tm *tm = localtime(&t);
@@ -42,15 +43,14 @@ void addChild(struct Node* parent, struct Node* child) {
     parent->numChildren++;
 }
 
-void addFileContent(Node* file, const char* content) {
+void addFileContent(Node* file, char* content) {
     //file->content = (char*)malloc(strlen(content) + 1);
-    strcpy(file->content, content);
+    file->content = content;
 }
 
 UndoOperation* deleteNode(Node* node) {
-
+    
     UndoOperation *currentOperation = createUndoOperation(DELETE_OPERATION,node);
-
     Node * parent;
     int numChildren = node->numChildren;
 
@@ -81,9 +81,9 @@ UndoOperation* deleteNode(Node* node) {
     }
 
     
-
-    if (node->isFile) {
-        //free(node->content);
+    if (node->content != NULL && node->isFile) {
+        free(node->content);
+        node->content = NULL;
     }
 
     if (node->children != NULL) {

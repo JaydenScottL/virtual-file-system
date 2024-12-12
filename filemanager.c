@@ -55,9 +55,16 @@ void printPath(Node* node, char* path, const char* targetDirectory) {
     }
 }
 
+char * getFileContent(Node* node){
+    if(node->isFile && node->content != NULL){
+        return node->content;
+    }
+    return "";
+}
+
 void printFileContent(Node* node){
     if(node->isFile){
-        printf("Content of %s:\n%s\n",node->name,node->content);
+        printf("Content of %s:\n%s\n",node->name,getFileContent(node));
     }
 }
 
@@ -260,7 +267,13 @@ int main() {
                                     ptr++;
                                 }
 
-                                strcpy(currentDirectory->children[i]->content,content);
+                                if(currentDirectory->children[i]->content != NULL){
+                                    free(currentDirectory->children[i]->content);
+                                    currentDirectory->children[i]->content = NULL;
+                                }
+                                char * temp = malloc(strlen(content) + 1);
+                                strcpy(temp,content);
+                                currentDirectory->children[i]->content = temp;
                                 flag = false;
                         }
                     }
@@ -410,6 +423,7 @@ int main() {
                         Node * destNode = scoutRoot(root,parentPath,numParentPath);
 
                         if(destNode != NULL && !destNode->isFile){
+                            pushUndo(undoStack,createUndoOperation(MOVE_OPERATION,temp));
                             addChild(destNode,temp);
                             flag2 = false;
                         
@@ -480,7 +494,7 @@ int main() {
                     perror("Error opening file");
                     return 1;
                 }
-                pushUndo(undoStack,deleteNode(root));
+                pushUndo(undoStack,deleteNode(root)); // does nothing currently
                 root = importFileSystem(fp);
                 currentDirectory = root;
                 flag = false;
@@ -499,6 +513,8 @@ int main() {
             printf("dir - Lists files and directories contained in this directory\n");
             printf("touch [filename] - Creates new file\n");
             printf("rm [filename] - Deletes file or directory\n");
+            printf("mv [filename] [destination] - Moves file or directory to destination\n");
+            printf("undo - Undoes last operation\n");
             printf("write [filename] - Writes to file\n");
             printf("read [filename] - Reads from file\n");
             printf("rename [filename] - Renames file or directory\n");

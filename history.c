@@ -22,7 +22,8 @@ struct OperationStack{
 
 enum OperationType{ 
     DELETE_OPERATION,
-    RENAME_OPERATION
+    RENAME_OPERATION,
+    MOVE_OPERATION
 };
 
 struct UndoOperation{
@@ -45,12 +46,15 @@ struct PathLinkedList{
 };
 
 UndoOperation * createUndoOperation(OperationType operation, Node *node){
+    
     UndoOperation *u = (UndoOperation*)malloc(sizeof(UndoOperation));
     u->operation = operation;
     u->node = node;
     u->isFile = node->isFile;
     strcpy(u->oldName, node->name);
-    strcpy(u->oldContent, node->content);
+    if(node->content != NULL){
+        strcpy(u->oldContent, node->content);
+    }
     strcpy(u->oldDateTime, node->creation_time);
     u->parent = node->parent;
     u->parentPath = NULL;
@@ -58,7 +62,7 @@ UndoOperation * createUndoOperation(OperationType operation, Node *node){
 
     Node *parent = node->parent;
     int numParentPath = 0;
-    
+
     while(parent != NULL){
         u->parentPath = (char**)realloc(u->parentPath, (numParentPath + 1) * sizeof(char*));
         u->parentPath[numParentPath] = (char*)malloc(100 * sizeof(char));
@@ -84,23 +88,6 @@ UndoOperation * popUndo(OperationStack* stack){
         return stack->operations[stack->top--];
     }
 }
-
-/*Node * scoutPath(Node *root, PathLinkedList *pathRoot) {
-    Node *temp = root;
-    PathLinkedList *current = pathRoot;
-    
-    while (current != NULL) {
-        for (int j = 0; j < temp->numChildren; j++) {
-            if (strcmp(temp->children[j]->name, current->path) == 0) {
-                temp = temp->children[j];
-                break;
-            }
-        }
-        current = current->next;
-    }
-    
-    return temp;
-}*/
 
 Node* scoutRoot(Node *root, char **parentPath,int numParentPath){
     Node *temp = root;
@@ -135,11 +122,38 @@ void processUndo(UndoOperation *currentOperation, Node *root){
             strcpy(currentOperation->node->name, currentOperation->oldName);
         }
     }
+
+    else if(currentOperation->operation == MOVE_OPERATION){
+        if(currentOperation->parent != NULL) {
+            Node *newNode = currentOperation->node;
+
+            if(newNode->parent != NULL){
+                Node *parent = newNode->parent;
+            
+
+                for (int i = 0; i < parent->numChildren; i++) {
+                    if (parent->children[i] == newNode) {
+                        // Shift elements to the left to remove the deleted node
+                        for (int j = i; j < parent->numChildren - 1; j++) {
+                            parent->children[j] = parent->children[j + 1];
+                        }
+                        parent->numChildren--;
+                        break;
+                    }
+                }
+            }
+
+            addChild(scoutRoot(root, currentOperation->parentPath, (currentOperation->numParentPath)), newNode);  
+            printf("Restored %s\n", newNode->name);
+            
+        }
+    }
     
     else if(currentOperation->operation == DELETE_OPERATION){
         if(currentOperation->parent != NULL) {
-            Node *newNode = createNode(currentOperation->oldName, 0);
+            Node *newNode = createNode(currentOperation->oldName, currentOperation->isFile);
             if(currentOperation->oldContent != NULL){
+                newNode->content = (char*)malloc(strlen(currentOperation->oldContent) + 1);
                 strcpy(newNode->content, currentOperation->oldContent);
             }
 
