@@ -85,7 +85,7 @@ UndoOperation * popUndo(OperationStack* stack){
     }
 }
 
-Node * scoutPath(Node *root, PathLinkedList *pathRoot) {
+/*Node * scoutPath(Node *root, PathLinkedList *pathRoot) {
     Node *temp = root;
     PathLinkedList *current = pathRoot;
     
@@ -100,18 +100,24 @@ Node * scoutPath(Node *root, PathLinkedList *pathRoot) {
     }
     
     return temp;
-}
+}*/
 
 Node* scoutRoot(Node *root, char **parentPath,int numParentPath){
     Node *temp = root;
 
-    int i = 1;
+    int i = 2; // changed from 1 to 2
     
-    while(i <= numParentPath){       
+    while(i <= numParentPath){   
+
+        bool flag = false;
         for(int j = 0; j < temp->numChildren; j++){
             if(strcmp(temp->children[j]->name, parentPath[numParentPath-i]) == 0){
                 temp = temp->children[j];      
+                flag = true;
             }
+        }
+        if(!flag){
+            return NULL; // added with change from i = 1 to i = 2
         }
         i++;
     }

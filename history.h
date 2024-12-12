@@ -42,7 +42,9 @@ struct PathLinkedList{
 
 UndoOperation * createUndoOperation(OperationType operation, Node *node);
 
-Node * scoutPath(Node *root, PathLinkedList *pathRoot);
+//Node * scoutPath(Node *root, PathLinkedList *pathRoot);
+
+Node* scoutRoot(Node *root, char **parentPath,int numParentPath);
 
 void pushUndo(OperationStack* stack, UndoOperation *operation);
 

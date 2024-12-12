@@ -363,6 +363,9 @@ int main() {
             char * argument = strtok(command, " "); 
             argument = strtok(NULL, ""); 
             bool flag = true;
+            bool flag2 = true;
+            char dest[100];
+
 
             PathLinkedList *pathRoot;
             PathLinkedList *pathPtr = pathRoot;
@@ -371,9 +374,9 @@ int main() {
                 for(int i = 0;i < currentDirectory->numChildren;i++){
                     
                     if(strcmp(currentDirectory->children[i]->name,argument) == 0){
-
+                        flag = false;
                         printf("Enter destination for %s:\n",argument);
-                        char dest[100];
+                        
                         fgets(dest,100,stdin);
                         
                         command[strcspn(dest, "\n")] = '\0';
@@ -387,45 +390,53 @@ int main() {
                             ptr++;
                         }
 
-                        pathPtr = (PathLinkedList*)malloc(sizeof(PathLinkedList));
-                        pathPtr->path = dest;
-                        pathPtr = pathPtr->next;
+                        Node * temp = currentDirectory->children[i];
                         
-                        Node *temp = scoutPath(root,pathRoot);
+                        char ** parentPath = (char**)malloc(100 * sizeof(char*));
+                        Node * parentNode = currentDirectory;
+                        int numParentPath = 0;
+                        parentPath[0] = (char*)malloc(100 * sizeof(char));
+                        strcpy(parentPath[0],dest);
+                        numParentPath++;
 
-                        addChild(temp,currentDirectory->children[i]);
-                        Node *parent = currentDirectory;
-                        for (int i = 0; i < parent->numChildren; i++) {
-                            if (parent->children[i] == currentDirectory->children[i]) {
-                                // Shift elements to the left to remove the deleted node
-                                for (int j = i; j < parent->numChildren - 1; j++) {
-                                    parent->children[j] = parent->children[j + 1];
+                        while(parentNode != NULL){
+                            parentPath = (char**)realloc(parentPath, (numParentPath + 1) * sizeof(char*));
+                            parentPath[numParentPath] = (char*)malloc(100 * sizeof(char));
+                            strcpy(parentPath[numParentPath],parentNode->name);
+                            numParentPath++;
+                            parentNode = parentNode->parent;
+                        }
+
+                        Node * destNode = scoutRoot(root,parentPath,numParentPath);
+
+                        if(destNode != NULL && !destNode->isFile){
+                            addChild(destNode,temp);
+                            flag2 = false;
+                        
+
+                            Node * parent = currentDirectory;
+                            for (int i = 0; i < parent->numChildren; i++) {
+                                if (parent->children[i] == currentDirectory->children[i]) {
+                                    // Shift elements to the left to remove the deleted node
+                                    for (int j = i; j < parent->numChildren - 1; j++) {
+                                        parent->children[j] = parent->children[j + 1];
+                                    }
+                                    parent->numChildren--;
+                                    break;
                                 }
-                                parent->numChildren--;
-                                break;
                             }
                         }
-
-                        
-
-                        if(temp->isFile){
-                            printf("%s is a file. Cannot move into a file.\n",argument);
-                        }else{
-                            
-                            
-                        }
-                    }
+                    }              
                 }
             }
-
-            
-            
-                
 
             if(flag){
                 printf("%s was not found in the directory\n",argument);
             }
-            
+
+            if(flag2 && !flag){
+                printf("%s was not found in the directory\n",dest);
+            } 
         }
 
         else if(strstr(l_command,"listfs") != NULL){ 
