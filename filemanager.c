@@ -10,7 +10,7 @@
 #include "externals.h"
 
 /*
-Name: Jayden 
+Name: Jayden LeCorps
 Date: 11/30/2024
 */
 
