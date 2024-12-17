@@ -133,8 +133,10 @@ void exportFileSystem(FILE* fp,Node * node){
     }else{
         //printf("/%s",node->name);
         fprintf(fp,"#name#%s",node->name);
-        if(strlen(node->content) > 0){
-            fprintf(fp,"#file_content#%s",node->content);
+        if(node->content != NULL){
+            if(strlen(node->content) > 0){
+                fprintf(fp,"#file_content#%s",node->content);
+            }
         }
 
         fprintf(fp,"#date_time#%s",node->creation_time);
